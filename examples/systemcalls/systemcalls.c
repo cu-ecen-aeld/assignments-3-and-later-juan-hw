@@ -17,6 +17,12 @@ bool do_system(const char *cmd)
  *   or false() if it returned a failure
 */
 
+	int retval = system( cmd );
+	
+	if ( retval == -1 ) {
+		return false;
+	} 
+
     return true;
 }
 
@@ -57,9 +63,35 @@ bool do_exec(int count, ...)
  *   (first argument to execv), and use the remaining arguments
  *   as second argument to the execv() command.
  *
-*/
-
+*/	
+    
     va_end(args);
+    pid_t pid = fork();
+
+    if ( pid == -1 ) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    } else if ( pid == 0 ) { // Child process
+        // Execute the command using execv
+        if (execv(command[0], command) == -1) {
+            perror("execv");
+            exit(EXIT_FAILURE);
+        }
+    } else {
+		// Wait for the child process to terminate
+		int status;
+		 
+		waitpid(pid, &status, 0);
+	 
+		if ( WIFEXITED(status) )
+		{    
+		    if ( WEXITSTATUS(status) != 0 ) {
+		    	printf("Exit status of the child was %d\n", WEXITSTATUS(status));
+		    	return false;
+			}  
+		}
+    }
+    
 
     return true;
 }
@@ -92,6 +124,64 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *   The rest of the behaviour is same as do_exec()
  *
 */
+
+	printf("command %s \n", command[0]);
+	pid_t pid = fork();
+
+    if (pid == -1) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    } else if ( pid == 0 ) { // Child process
+        // Open the output file for writing, create if it does not exist, truncate if it does
+        int fd = open(outputfile, O_RDWR | O_CREAT);
+        if (fd == -1) {
+            perror("open");
+        	exit(EXIT_FAILURE);
+        }
+
+        // Redirect stdout to the output file
+        if ( dup2(fd, STDOUT_FILENO) == -1) {
+            perror("dup2");
+            close(fd);
+            exit(EXIT_FAILURE);
+        }
+
+        // Close the original file descriptor for the output file
+        close(fd);
+
+        // Execute the command using execv
+        if (execv(command[0], command) == -1) {
+            perror("execv");
+            exit(EXIT_FAILURE);
+        }
+    } else {
+		// Wait for the child process to terminate
+		int status;
+		 
+		waitpid(pid, &status, 0);
+	 
+		if ( WIFEXITED(status) )
+		{    
+		    if ( WEXITSTATUS(status) != 0 ) {
+		    	printf("Exit status of the child was %d\n", WEXITSTATUS(status));
+		    	return false;
+			}  
+		}
+    }
+
+/*
+	pid_t kidpid;
+	int fd = open( outputfile, O_RDWR|O_TRUNC|O_CREAT );
+	if (fd < 0) { perror("open"); abort(); }
+	switch ( kidpid = fork() ) {
+	  case -1: perror("fork"); abort();
+	  case 0:
+	  	printf("No errors opening file \n");
+		close(fd);
+		execvp(command[0], command); perror("execvp"); abort();
+	  default:
+		close(fd);
+	}*/
 
     va_end(args);
 
