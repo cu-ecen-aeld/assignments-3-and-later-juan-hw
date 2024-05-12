@@ -37,6 +37,7 @@ if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
     #git apply ../fix_patch.patch
 
     # TODO: Add your kernel build steps here
+    echo "Building kernel..."
     echo "Running make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} mrproper"
     make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} mrproper
     
@@ -67,8 +68,7 @@ fi
 
 # TODO: Create necessary base directories
 echo "Creating rootfs directory at ${OUTDIR}/rootfs"
-mkdir ${OUTDIR}/rootfs
-cd ${OUTDIR}/rootfs
+mkdir -p ${OUTDIR}/rootfs && cd ${OUTDIR}/rootfs
 mkdir -p bin dev etc home lib lib64 proc sbin sys tmp usr var
 mkdir -p usr/bin usr/lib usr/sbin
 mkdir -p var/log
@@ -100,34 +100,32 @@ ${CROSS_COMPILE}readelf -a ../rootfs/bin/busybox | grep "Shared library"
 # TODO: Add library dependencies to rootfs
 echo "Add program interpreter"
 
-#cp $HOME/Documents/aarch_arm/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 \
-#	$HOME/Documents/Linux_Programming_Embedded_Course/Linux_System_Programming_Buildroot/assignment-3-juan-hw/finder-app/rootfs/lib
+cd "$FINDER_APP_DIR"
 
-#cp $HOME/Documents/aarch_arm/aarch64-none-linux-gnu/libc/lib64/libm.so.6 \
-#	$HOME/Documents/Linux_Programming_Embedded_Course/Linux_System_Programming_Buildroot/assignment-3-juan-hw/finder-app/rootfs/lib64
+cp libs/ld-linux-aarch64.so.1 ${OUTDIR}/rootfs/lib
+
+cp libs/libm.so.6 ${OUTDIR}/rootfs/lib64
 	
-#cp $HOME/Documents/aarch_arm/aarch64-none-linux-gnu/libc/lib64/libresolv.so.2 \
-#	$HOME/Documents/Linux_Programming_Embedded_Course/Linux_System_Programming_Buildroot/assignment-3-juan-hw/finder-app/rootfs/lib64
+cp libs/libresolv.so.2 ${OUTDIR}/rootfs/lib64
 	
-#cp $HOME/Documents/aarch_arm/aarch64-none-linux-gnu/libc/lib64/libc.so.6 \
-#	$HOME/Documents/Linux_Programming_Embedded_Course/Linux_System_Programming_Buildroot/assignment-3-juan-hw/finder-app/rootfs/lib64
+cp libs/libc.so.6 ${OUTDIR}/rootfs/lib64
 
 # TODO: Make device nodes
 cd $OUTDIR/rootfs
 sudo mknod -m 666 dev/null c 1 3
-sudo mknod -m 666 dev/ttyS0 c 5 1
-
-cd "$OUTDIR"
+sudo mknod -m 666 dev/console c 5 1
 
 # TODO: Clean and build the writer utility
 echo "Cleaning previous writer compilations" 
+
+cd "$FINDER_APP_DIR"
+
 make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} clean
 
 echo "Recompiling writer application for arch=$ARCH"
 make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} default
 
 echo "Copying writer application into file system"
-cp writer $OUTDIR/rootfs/home
 
 # TODO: Copy the finder related scripts and executables to the /home directory
 # on the target rootfs
@@ -135,6 +133,8 @@ cp writer $OUTDIR/rootfs/home
 cp finder.sh  finder-test.sh $OUTDIR/rootfs/home
 mkdir $OUTDIR/rootfs/home/conf
 cp conf/username.txt conf/assignment.txt $OUTDIR/rootfs/home/conf
+echo "Copying autorun-qemu.sh script into the rootfs"
+cp autorun-qemu.sh $OUTDIR/rootfs/home/
 
 cd $OUTDIR/rootfs/home
 
@@ -152,18 +152,13 @@ sed -i "s|$old_line|$new_line|g" "$file"
 
 echo "Replacement complete."
 
-cd "$OUTDIR"
-
-echo "Copying Copy the autorun-qemu.sh script into the rootfs"
-cp autorun-qemu.sh $OUTDIR/rootfs/home/
-
 cd "$OUTDIR/rootfs"
 
 # TODO: Chown the root directory
-find . | cpio -H newc -ov --owner root:root > ${OUTDIR}/initramfs.cpio
+sudo chown root:root -R $OUTDIR/rootfs
 
 # TODO: Create initramfs.cpio.gz
-cd "$OUTDIR"
-gzip -f initramfs.cpio
+find . | cpio -H newc -ov --owner root:root > $OUTDIR/initramfs.cpio
+gzip -f $OUTDIR/initramfs.cpio
 
 echo "Building Linux Kernel and RootFS completed succesfully."
