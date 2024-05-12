@@ -126,6 +126,7 @@ echo "Recompiling writer application for arch=$ARCH"
 make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} default
 
 echo "Copying writer application into file system"
+cp writer $OUTDIR/rootfs/home
 
 # TODO: Copy the finder related scripts and executables to the /home directory
 # on the target rootfs
