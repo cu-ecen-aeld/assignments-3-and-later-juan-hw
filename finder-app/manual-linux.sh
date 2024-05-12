@@ -34,7 +34,7 @@ if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
     echo "Checking out version ${KERNEL_VERSION}"
     git checkout ${KERNEL_VERSION}
     
-    git apply $HOME/Documents/Linux_Programming_Embedded_Course/Linux_System_Programming_Buildroot/assignment-3-juan-hw/finder-app/fix_patch.patch
+    git apply ../fix_patch.patch
 
     # TODO: Add your kernel build steps here
     echo "Running make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} mrproper"
@@ -99,6 +99,7 @@ ${CROSS_COMPILE}readelf -a ../rootfs/bin/busybox | grep "Shared library"
 
 # TODO: Add library dependencies to rootfs
 echo "Add program interpreter"
+
 cp $HOME/Documents/aarch_arm/aarch64-none-linux-gnu/libc/lib/ld-linux-aarch64.so.1 \
 	$HOME/Documents/Linux_Programming_Embedded_Course/Linux_System_Programming_Buildroot/assignment-3-juan-hw/finder-app/rootfs/lib
 
