@@ -3,6 +3,11 @@ CFLAGS = -g
 
 # the following two rules are implicit in GNU make
 # make them explicit for learning purposes
+
+all:
+	rm -f writer *.o
+	$(CC) $(LDFLAGS) $^ $(LOADLIBS) $(LDLIBS) -o $@
+
 writer: writer.o
 	$(CC) $(LDFLAGS) $^ $(LOADLIBS) $(LDLIBS) -o $@
 
