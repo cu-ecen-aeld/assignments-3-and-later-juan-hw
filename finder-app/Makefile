@@ -12,10 +12,6 @@ TARGET := writer
 # Default target to build the application
 default: $(TARGET)
 
-all:
-	rm -f $(TARGET) $(OBJ)
-	$(TARGET)
-
 # Rule to build the application
 $(TARGET): $(OBJ)
 	$(CROSS_COMPILE)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
@@ -27,5 +23,7 @@ $(TARGET): $(OBJ)
 # Clean target to remove generated files
 clean:
 	rm -f $(TARGET) $(OBJ)
+	
+all: clean default
 
 
