@@ -1,18 +1,31 @@
-CC = $(CROSS_COMPILE)gcc
-CFLAGS = -g
+# Compiler options
+CC := gcc
+CROSS_COMPILE ?=
+CFLAGS :=
+LDFLAGS :=
 
-# the following two rules are implicit in GNU make
-# make them explicit for learning purposes
+# Source files
+SRC := writer.c
+OBJ := $(SRC:.c=.o)
+TARGET := writer
+
+# Default target to build the application
+default: $(TARGET)
 
 all:
-	rm -f writer *.o
-	$(CC) $(LDFLAGS) $^ $(LOADLIBS) $(LDLIBS) -o $@
+	rm -f $(TARGET) $(OBJ)
+	$(TARGET)
 
-writer: writer.o
-	$(CC) $(LDFLAGS) $^ $(LOADLIBS) $(LDLIBS) -o $@
+# Rule to build the application
+$(TARGET): $(OBJ)
+	$(CROSS_COMPILE)$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
+# Rule to compile source files
 %.o: %.c
-	$(CC) -c $(CPPFLAGS) $(CFLAGS) $^ -o $@
+	$(CROSS_COMPILE)$(CC) $(CFLAGS) -c -o $@ $<
 
+# Clean target to remove generated files
 clean:
-	rm -f writer *.o
+	rm -f $(TARGET) $(OBJ)
+
+
