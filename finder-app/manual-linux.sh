@@ -132,8 +132,12 @@ cp writer $OUTDIR/rootfs/home
 # on the target rootfs
 
 cp finder.sh  finder-test.sh $OUTDIR/rootfs/home
+cp finder.sh finder-test.sh writer $OUTDIR/rootfs/usr/bin
 mkdir $OUTDIR/rootfs/home/conf
+mkdir $OUTDIR/rootfs/etc/finder-app
+mkdir $OUTDIR/rootfs/etc/finder-app/conf
 cp conf/username.txt conf/assignment.txt $OUTDIR/rootfs/home/conf
+cp conf/username.txt conf/assignment.txt $OUTDIR/rootfs/etc/finder-app/conf
 echo "Copying autorun-qemu.sh script into the rootfs"
 cp autorun-qemu.sh $OUTDIR/rootfs/home/
 
